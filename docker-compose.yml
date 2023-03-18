@@ -1,0 +1,50 @@
+version: '3.7'
+
+services:
+    web:
+        image: nginx:alpine
+        restart: unless-stopped
+        ports:
+            - "3333:80"
+        volumes:
+            - .:/var/www
+            - ./.docker/nginx:/etc/nginx/conf.d
+        networks:
+            - apptica_network
+        depends_on:
+            - php
+
+    php:
+        build:
+            context: .
+            args:
+                user: 1000
+                uid: 1000
+            dockerfile: ./.docker/php/Dockerfile
+        restart: unless-stopped
+#        working_dir: /var/www/
+        volumes:
+            - .:/var/www
+        networks:
+            - apptica_network
+
+    db:
+        image: postgres:11-alpine
+        restart: unless-stopped
+        environment:
+            POSTGRES_DB: apptica
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+        ports:
+            - "5433:5432"
+        volumes:
+            - apptica_db:/var/lib/postgresql/data
+        networks:
+            - apptica_network
+
+volumes:
+    apptica_db:
+
+networks:
+    apptica_network:
+        driver: bridge
